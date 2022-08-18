@@ -1,0 +1,116 @@
+%pasaPor(transporte, barrio).
+pasaPor(colectivo(7, samore), retiro).
+pasaPor(colectivo(7, samore), monserrat).
+pasaPor(colectivo(7, samore), balvanera).
+pasaPor(colectivo(7, samore), boedo).
+pasaPor(colectivo(7, samore), parqueChacabuco).
+pasaPor(colectivo(7, samore), flores).
+pasaPor(colectivo(7, samore), samore).
+pasaPor(colectivo(101, retiro), retiro).
+pasaPor(colectivo(101, retiro), balvanera).
+pasaPor(colectivo(101, retiro), parquePatricio).
+pasaPor(colectivo(101, retiro), flores).
+pasaPor(colectivo(101, retiro), samore).
+pasaPor(colectivo(132, flores), flores).
+pasaPor(colectivo(132, flores), caballito).
+pasaPor(colectivo(132, flores), balvanera).
+pasaPor(colectivo(132, flores), retiro).
+pasaPor(subte(e), monserrat).
+pasaPor(subte(e), constitucion).
+pasaPor(subte(e), boedo).
+pasaPor(subte(e), parqueChacabuco).
+pasaPor(subte(e), flores).
+pasaPor(subte(a), caballito).
+pasaPor(subte(a), monserrat).
+pasaPor(subte(a), flores).
+%conduce(conductor, medioDeTransporte).
+conduce(marcela, subte(a)).
+conduce(pablo, colectivo(7, samore)).
+conduce(pablo, colectivo(101, retiro)).
+conduce(cecilia, colectivo(101, retiro)).
+conduce(mariano, subte(e)).
+conduce(mariano, subte(a)).
+%viaja(persona, transporte).
+viaja(pepe, colectivo(101, retiro)).
+viaja(julian, subte(e)).
+viaja(julian, subte(a)).
+viaja(judith, colectivo(7, samore)).
+viaja(clara, Transporte):-viaja(pepe, Transporte), 
+    	not(viaja(judith, Transporte)).
+viaja(ignacio, Transporte):-viaja(julian, Transporte).
+viaja(ignacio, Transporte):-viaja(judith, Transporte).
+%1
+%comoViajarA(barrio, otroBarrio, linea).
+comoViajarA(Barrio, OtroBarrio, Linea):- pasaPor(Transporte, Barrio), 
+    pasaPor(Transporte, OtroBarrio), Barrio \= OtroBarrio, 
+    linea(Transporte, Linea).
+
+linea(colectivo(Linea, _), Linea).
+linea(subte(Linea), Linea).
+%2
+unicoMedioDeTransporte(Transporte, Barrio):-pasaPor(Transporte, Barrio), 
+    forall((pasaPor(OtroTransporte, OtroBarrio), Transporte \= OtroTransporte), OtroBarrio \= Barrio).
+
+unicoMedioDeTransporteNot(Transporte, Barrio):-pasaPor(Transporte, Barrio), 
+    not(((pasaPor(OtroTransporte, OtroBarrio), Transporte \= OtroTransporte), OtroBarrio \= Barrio)).
+%3
+comparteElMismoCamino(Persona, OtraPersona):-viaja(Persona, Transporte), viaja(OtraPersona, Transporte), 
+    Persona \= OtraPersona.
+comparteElMismoCamino(Persona, OtraPersona):- viaja(Persona, Transporte), viaja(OtraPersona, OtroTansporte),
+    Transporte \= OtroTransporte, Persona \= OtraPersona, pasaPor(Transporte, Barrio), 
+    pasaPor(Transporte, OtroBarrio), Barrio \= OtroBarrio, 
+    pasaPor(OtroTansporte, Barrio), pasaPor(OtroTransporte, OtroBarrio). 
+%4
+viajaBien(Persona):-viaja(Persona, _), forall(viaja(Persona, Transporte), tieneBuenaFrecuencia(Transporte)).
+
+tieneBuenaFrecuencia(colectivo(132, _)).
+tieneBuenaFrecuencia(subte(_)).
+
+
+%5
+conoce(ignacio, julian).
+conoce(ignacio, judith).
+conoce(judith, clara).
+conoce(clara, pepe).
+
+viajaSolo(Persona):-persona(Persona), forall(sonConocidos(Persona, OtraPersona), not(comparteElMismoCamino(Persona, OtraPersona))).
+
+persona(Persona):- viaja(Persona, _).
+
+sonConocidos(Persona, OtraPersona):-conoce(Persona, OtraPersona).
+sonConocidos(Usuario, Conocido):-conoce(Usuario, OtroUsuario), sonConocidos(OtroUsuario, Conocido).
+
+%6
+esRecomendable(Transporte):-cantidadUsuarios(Transporte, Cantidad),
+    forall(cantidadUsuarios(_, OtraCantidad), OtraCantidad =< Cantidad), 
+    tieneBuenaFrecuencia(Transporte).
+
+cantidadUsuarios(Transporte, Cantidad):- transporte(Transporte), 
+    findall(Usuario, viaja(Usuario, Transporte), ListaUsuarios), length(ListaUsuarios, Cantidad).
+
+transporte(Transporte):- pasaPor(Transporte, _).
+
+quedaEn(venezuela, america).
+quedaEn(argentina, america).
+quedaEn(patagonia, argentina).
+quedaEn(aula522, utn). % Sí, un aula es un lugar!
+quedaEn(utn, buenosAires).
+quedaEn(buenosAires, argentina).
+
+tarea(dani, tomarExamen(paradigmaLogico, aula522), fecha(10, 8, 2019)).
+tarea(dani, meterGol(primeraDivision), fecha(10, 8, 2019)).
+tarea(alf, discurso(utn, 0), fecha(11, 8, 2019)).
+
+nacioEn(dani, caba).
+nacioEn(alf, caba).
+nacioEn(nico, caba).
+
+%1
+nuncaSalioDeCasa(Persona):-nacioEn(Persona, LugarNacimiento), 
+    forall(tarea(Persona, Tarea, _), lugar(Tarea, LugarNacimiento)).
+
+lugar(discurso(Lugar, _), Lugar).
+lugar(tomarExamen(_, Lugar), Lugar).
+lugar(meterGol(Torneo), Lugar):- seJuegaEn(Torneo, Lugar).
+
+seJuegaEn(primeraDivision, argentina).
